@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Estimating Australia’s COVID-19 instantaneous reproduction number | Ben Qiu</title>
+<meta name="generator" content="Jekyll v3.8.7" />
+<meta property="og:title" content="Estimating Australia’s COVID-19 instantaneous reproduction number" />
+<meta property="og:locale" content="en_US" />
+<link rel="canonical" href="http://localhost:4000/" />
+<meta property="og:url" content="http://localhost:4000/" />
+<meta property="og:site_name" content="Ben Qiu" />
+<script type="application/ld+json">
+{"@type":"WebSite","url":"http://localhost:4000/","headline":"Estimating Australia’s COVID-19 instantaneous reproduction number","name":"Ben Qiu","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=c55ce9e97f52f99d6933fa05b2c6c7a83313329f">
+    <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1><a href="http://localhost:4000/">Ben Qiu</a></h1>
+        
+        
+
+        <p></p>
+
+        
+        <p class="view"><a href="https://github.com/b-qiu/b-qiu.github.io">View the Project on GitHub <small>b-qiu/b-qiu.github.io</small></a></p>
+        
+
+        
+
+        
+      </header>
+      <section>
+
+      <h1 id="estimating-australias-covid-19-instantaneous-reproduction-number">Estimating Australia’s COVID-19 instantaneous reproduction number</h1>
+
+<p><em>This is an “old” write-up from April 2020.</em></p>
+
+<p><strong>NB not a epidemiologist.</strong></p>
+
+<p><a href="https://benqiu.shinyapps.io/Aus_COVID19_R/">Link to R shiny dashboard</a></p>
+
+<p>As of late April 2020, Australia is well past its peak for COVID-19 cases, at least for the first wave anyway. We have moved beyond the discussion of how to minimise the spread of disease, what policies to put in place and how strict they should be, and what emergency first aid is needed for the economy.</p>
+
+<p>Numerous dashboards have been set up to track the number of new cases and tests, the deaths over time, and statistics on the demographics of the cases.</p>
+
+<p>In early to mid April there was a somewhat lack of information on what R for Australia was. Cases were lowering for sure and the peak had truly been passed, but what about R?</p>
+
+<p>For those who haven’t been glued to the minute by minute COVID-19 / SARS-Cov-2 updates, R is the <em>effective</em> (or <em>instantaneous</em>) reproductive number, a dimensionless number (not a rate) that represents the average number of secondary cases that will arise from a single infected individual. This is also often denoted as R_e (or R_t). R can and generally will change over time depending on the characteristics of the population and the mitigation strategies put in place.</p>
+
+<p>R_0 on the other hand is the <em>basic</em> reproduction number, a constant that describes the average number of secondary cases that will arise from a single case, where an entire population remains susceptible and no intervening strategies are put in place. This number does not change over time and is used to describe the general characteristic of an infectious disease. What is interesting is that R_0 is not meant to be constant across different populations of countries, it is context specific. This is why you see a range of quoted R_0’s for different diseases, and that a range is presented for SARS-Cov-2 for reasons beyond the fact that it’s a novel disease. With that in mind, it should follow that R_0 may not be a super useful number to assess an ongoing outbreak, especially when comparing across regions.</p>
+
+<p>I decided to try my hand at helping myself figure out where Australia was at with its R.</p>
+
+<p>I was also curious to see what I could get out of building a R shiny app. In my day job my focus is usually on building gigantic, complex but elegantly presented excel monsters, and producing code that bake in simulations and sensitivities – rarely do I need to produce a dedicated dashboard like interface to explicitly explore different scenarios (I did build an excel dashboard for one particular case with a client that was in the process of going through a contract pricing review for a eight-figure contract).</p>
+
+<p>To cut to the chase, the engine behind this entire R estimation exercise is the <a href="https://sites.google.com/site/therepiproject/r-pac/epiestim">EpiEstim package</a>. Written by Dr. Anne Cori at Imperial College London, EpiEstim estimates R via two inputs: incidence data (infections over time) and some distribution of the case serial interval (time between the appearance of symptoms from the primary case to secondary cases).</p>
+
+<p>This leads us nicely into part 1 of the build – finding inputs for incidence data, and the serial interval. On incidence data, many outlets were producing cases of infection at the time, although often with visible differences among them. Three sources were chosen on no particular criteria apart from the fact that various outlets have quoted these sources on different occasions - John Hopkins University, Our world in data, and Worldometer. John Hopkins University and Our world in data have kindly provided their data in easy to access form on Github. For Worldometer I decided to web scrape in a small exercise.</p>
+
+<p>If the slightly different input data sets caused large changes in R estimates it would be cause for alarm, and which might initiate further research on why these inputs are different, but so far that has not been the case.</p>
+
+<p>For the serial interval I relied on this <a href="https://wwwnc.cdc.gov/eid/article/26/6/20-0357_article">one paper</a>. The EpiEstim package allows the serial interval to be provided to it, via a mean and a standard distribution, or it can estimate the serial interval based on raw interval information (i.e. the range of estimated symptom onset of the infector, and the range of estimated symptom onset of the infectee. Effectively this is the underlying data that lets you arrive at a mean and standard deviation of time to transmission).</p>
+
+<p>For part 2 of the build, I added a tab to the dashboard which allowed you to generate a wave of new cases some point in the future. This served two purposes: to observe (i) what different sized and shaped outbreaks do to outcomes of R, and (ii) what parameters in this particular curve generation function most closely matched the shape of the existing Australian outbreak.</p>
+
+<p>For the simulated case incidence curve I have chosen arbitrarily to use a piecewise function made up of two logistic functions. The most popular epidemiology models are generally built up from a series of <a href="https://timchurches.github.io/blog/posts/2020-03-10-modelling-the-effects-of-public-health-interventions-on-covid-19-transmission-part-1/">first order differentials</a>. Here I have simply decided on a global growth rate and decline rate, each for the two logistic functions that represent the ramping up stage and ramping down stage of cases.</p>
+
+<p>I broke down the simulated case curve into two parts simply because I wanted the curve to be asymmetrical: right skew is generally observed in mechanistic models and in actual case counts. The decay in the number of  newly infected cases is generally stretched out and more prolonged compared to the growth phase of newly infected cases. By tweaking the slope term in the logistic function you’re able to tighten up or spread out the shape of either curve.</p>
+
+<p>Once you provide the simulator with a day 1 outbreak size, the case count on day 2 is equal to the growth rate times the day 1 outbreak, hence the weirdly shaped case count curve: day 2 looks to be a precipitous drop from day 1, but then the case count grows smoothly from then on as the new cases on day three is a function of both day 1 and day 2 and so on and so forth.</p>
+
+<p>I won’t go through the entire code here, as other resources serve a much better starting point to building a shiny app, but there are examples of some issues I found to be interesting (sizing and stacked placement of the ggplot outputs, setting the y axis to be dynamic or fixed, figuring out how to stitch together the logistic curves etc.)</p>
+
+<p>This exercise was a quick and fast one (took about two afternoons) and it was an enjoyable build.</p>
+
+<p>Here are a few quick takeaways: Your R is highly sensitive to the number of absolute cases, the error bars are wide and kind of useless when your level of incidence is low. A small outbreak that grows from 10 to 50 in 3 days will give you a R that far exceeds 1 – R is agnostic to relative size but sensitive to shape. This means R isn’t a great number to track at the beginning of outbreaks, it’s utility is greatest with large outbreaks that are in the decay phase.</p>
+
+
+
+      </section>
+      <footer>
+        
+        <p>This project is maintained by <a href="https://github.com/b-qiu">b-qiu</a></p>
+        
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/assets/js/scale.fix.js"></script>
+    
+  </body>
+</html>

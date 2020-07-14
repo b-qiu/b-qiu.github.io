@@ -1,3 +1,1 @@
-# SLUG
-
-Welcome to blag
+# blug
